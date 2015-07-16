@@ -4,17 +4,23 @@ Option Explicit
 
 
 'YOUR EXCEL SHEET MUST BE FORMATTED AS:
-'     |        A          |         B         |        C         |        D        |           E          |
-'  1  |   email address   | first & last name | name of company  |    CC Email     |    body of email     |
-'  2  |   email address   | first & last name | name of company  |    CC Email     |                      |
-'  3  |   email address   | first & last name | name of company  |                 |                      |
+'     |        A          |         B         |        C         |        D        |           E
+'  1  |   email address   | first & last name | name of company  |    CC Email     |    body of email
+'  2  |john.doe@yahoo.com |      John Doe     | National Oil Co  | yourboss@aol.com|I am writing to alert you of a recent change in company policy...
+'  3  |jsmith19@gmail.com |     Jane Smith    |    Github.com    |  team@gmail.com |
+'  4  | ccole490@aol.com  |     Karen Cole    |    United Coal   |                 |
 
 
-'Remember to open and log into outlook before running this script
-'Press "F5" or click the play button in the toolbar to run
-'Your message will contain <!FirstName Lastname!> and <!Company!> in the confirmation window, but these values will match your columns B and C when they are sent
+'Remember to open and log into outlook before running this script.
+'Press "F5" or click the play button in the toolbar to run.
+'Your message will contain <!FirstName Lastname!> and <!Company!> in the confirmation window, but these values will match your columns B and C when they are sent.
 'Warning: if you run this script, emails will be sent as soon as you confirm your message content!. Make sure your message is correct.
 
+'EMAIL BODY
+'There is no need to add a salutation, emails will automatically contain "Dear Firstname Lastname," and a blank line.
+'Write your message in cell E2, using <!Company!> where you want the company variable to be placed.
+'Use <!Enter!> on its own line to have a blank line.
+'Ensure that your desired formatting matches the formatting in the confirmation window.
 
 '************************************
 'Program created by:
@@ -43,7 +49,7 @@ Dim ccString As String
 Dim boolAttach As Boolean
 Dim numMails As Integer
 
-'Set up variables for use in the confirmation window
+'set up variables for use in the confirmation window
 msgCompany = "<Company Name>"
 msgName = "<!FirstName LastName!>"
 msgGreeting = "Dear " & msgName & "," & skipLine
