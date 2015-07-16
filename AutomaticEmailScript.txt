@@ -1,0 +1,194 @@
+Option Explicit
+
+'REMEMBER TO ADD REFERENCES! (Tools->References->Check the boxes for "Microsoft Scripting Runtime" and "Microsoft Outlook ##.# Object Library")
+
+
+'YOUR EXCEL SHEET MUST BE FORMATTED AS:
+'     |        A          |         B         |        C         |        D        |           E          |
+'  1  |   email address   | first & last name | name of company  |    CC Email     |    body of email     |
+'  2  |   email address   | first & last name | name of company  |    CC Email     |                      |
+'  3  |   email address   | first & last name | name of company  |                 |                      |
+
+
+'Remember to open and log into outlook before running this script
+'Press "F5" or click the play button in the toolbar to run
+'Your message will contain <!FirstName Lastname!> and <!Company!> in the confirmation window, but these values will match your columns B and C when they are sent
+'Warning: if you run this script, emails will be sent as soon as you confirm your message content!. Make sure your message is correct.
+
+
+'************************************
+'Program created by:
+'Thomas Shelley and John Mccutcheon
+'For:
+'The United States Embassy, Chengdu
+'************************************
+
+Sub SendEmail()
+
+
+Dim skipLine As String
+Dim outlookApp As Object
+Dim mItem As Object
+Dim cell As Range
+Dim filePath As String
+Dim eAddress As String
+Dim msgCompany As String
+Dim msgString As String
+Dim msgName As String
+Dim msgGreeting As String
+Dim msgSubject As String
+Dim msgBody As String
+Dim eAttachment As String
+Dim ccString As String
+Dim boolAttach As Boolean
+Dim numMails As Integer
+
+'Set up variables for use in the confirmation window
+msgCompany = "<Company Name>"
+msgName = "<!FirstName LastName!>"
+msgGreeting = "Dear " & msgName & "," & skipLine
+skipLine = " " & vbNewLine & " " & vbNewLine
+msgSubject = InputBox("Enter the subject of your Email")
+
+numMails = 0
+Set outlookApp = CreateObject("Outlook.Application")
+
+'add attachments
+Dim responseInt As Integer
+Dim strPrompt As String
+Dim strTitle As String
+strPrompt = "Would you like to add attachments?"
+strTitle = "Attach Files"
+responseInt = MsgBox(strPrompt, vbYesNo, strTitle)
+    
+    If responseInt = vbYes Then
+    
+        Dim filter As String, title As String, msg As String
+        Dim i As Integer, filterIndex As Integer
+        Dim fileName As Variant
+        
+        filter = "Excel Files (*.xls),*.xls," & _
+            "Text Files (*.txt),*.txt," & _
+            "All Files (*.*),*.*"
+        filterIndex = 3
+        title = "Select File(s) to Attach"
+        
+        With Application
+            fileName = .GetOpenFilename(filter, filterIndex, title, , True)
+        End With
+        
+        If Not IsArray(fileName) Then
+            MsgBox "No file was selected."
+            boolAttach = False
+        End If
+        
+        boolAttach = True
+        
+    End If
+    
+Dim confirm As Integer
+Dim prompt As String
+Dim t As String
+
+'show the confirmation window
+msgString = Range("E2").Text
+msgString = Replace(msgString, "<!Enter!>", " ")
+msgString = Replace(msgString, "<!enter!>", " ")
+prompt = "Your Email reads: " & skipLine & msgGreeting & skipLine & msgString & skipLine & "Are you sure you want to send?"
+t = "Send Emails"
+confirm = MsgBox(prompt, vbYesNo, t)
+    
+    If confirm = vbNo Then
+        Exit Sub
+    End If
+
+Dim ccCounter As Integer
+ccCounter = 0
+
+On Error GoTo noCC:
+
+'add CCs
+For Each cell In Columns("D").Cells.SpecialCells(xlCellTypeConstants)
+    
+    If cell.Value Like "*@*" Then
+         ccString = ccString & cell.Value & "; "
+    End If
+    
+Next
+
+noCC:
+Resume Next
+
+'create the email variables
+For Each cell In Columns("A").Cells.SpecialCells(xlCellTypeConstants)
+
+    If cell.Value Like "*@*" Then
+    
+        eAddress = cell.Offset(0, 0).Value
+        msgName = cell.Offset(0, 1).Value
+        msgCompany = cell.Offset(0, 2).Value
+        msgGreeting = "Dear " & msgName & "," & skipLine
+        msgBody = Replace(msgString, "<!Company!>", msgCompany)
+        msgBody = Replace(msgBody, "<!company!>", msgCompany)
+        Set mItem = outlookApp.CreateItem(0)
+    
+        'send the emails
+        With mItem
+            .To = eAddress
+            .Subject = msgSubject
+            .Body = msgGreeting & vbNewLine & msgBody
+            If ccString <> "" Then
+            .cc = ccString
+            End If
+            If boolAttach = True Then
+                For i = LBound(fileName) To UBound(fileName)
+                    .Attachments.Add fileName(i)
+                Next i
+            End If
+            
+            .Send
+        End With
+    
+        numMails = numMails + 1
+    
+    End If
+    
+Next
+
+
+MsgBox (numMails & " Messages Sent!")
+
+
+End Sub
+
+'function to add attachements
+Function selectFile()
+
+    Dim fd As FileDialog, fileName As String
+    On Error GoTo ErrorHandler
+    Set fd = Application.FileDialog(msoFileDialogFilePicker)
+    fd.AllowMultiSelect = True
+    
+    If fd.Show = True Then
+    
+        If fd.SelectedItems() <> vbNullString Then
+            fileName = fd.SelectedItems()
+        End If
+        
+    Else
+    
+        End
+        
+    End If
+    
+    selectFile = fileName
+    Set fd = Nothing
+    Exit Function
+    
+ErrorHandler:
+    Set fd = Nothing
+    MsgBox "Error " & Err & ": " & Error(Err)
+    
+End Function
+
+
